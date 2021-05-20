@@ -417,7 +417,7 @@ export class EosHandler {
           await this.db.saveEosUnlock(newRecords);
         }
       } catch (e) {
-        logger.error(`EosHandler checkUnlockTxStatus error:${e.toString()}`);
+        logger.error(`EosHandler checkUnlockTxStatus error:${e}`);
         await asyncSleep(3000);
       }
     }

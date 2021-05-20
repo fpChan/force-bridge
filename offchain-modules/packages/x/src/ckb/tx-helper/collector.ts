@@ -61,7 +61,6 @@ export class IndexerCollector extends Collector {
     const cells = await this.indexer.getCells(searchKey);
     let balance = Amount.ZERO;
     cells.forEach((cell) => {
-      logger.debug('cell.data:', cell.data);
       const amount = Amount.fromUInt128LE(cell.data);
       balance = balance.add(amount);
     });

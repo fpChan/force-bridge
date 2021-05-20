@@ -115,7 +115,7 @@ export class BtcHandler {
         await this.db.saveBtcUnlock(records);
         logger.error(
           `BtcHandler watchUnlockEvents there is an error occurred during in btc chain send unlock.`,
-          e.toString(),
+          e,
         );
       }
     }
