@@ -1,7 +1,7 @@
 import { Cell, Script as LumosScript } from '@ckb-lumos/base';
 import { common } from '@ckb-lumos/common-scripts';
 import { TransactionSkeleton, TransactionSkeletonType } from '@ckb-lumos/helpers';
-import { CellCollector, Indexer } from '@ckb-lumos/indexer';
+import { CellCollector, Indexer } from '@ckb-lumos/sql-indexer';
 import { Address, Amount, Script } from '@lay2/pw-core';
 import CKB from '@nervosnetwork/ckb-sdk-core';
 import { IndexerCollector } from '../../ckb/tx-helper/collector';
@@ -38,8 +38,8 @@ export class CkbTxGenerator {
     dep_type: ForceBridgeCore.config.ckb.deps.bridgeLock.cellDep.depType,
   };
 
-  async fetchMultisigCell(indexer: Indexer, maxTimes: number): Promise<Cell> {
-    const cellCollector = new CellCollector(indexer, {
+  async fetchMultisigCell(lumosIndexer: Indexer, maxTimes: number): Promise<Cell> {
+    const cellCollector = new CellCollector(lumosIndexer, {
       type: ForceBridgeCore.config.ckb.multisigType,
     });
     let index = 0;
@@ -57,8 +57,8 @@ export class CkbTxGenerator {
     }
   }
 
-  async fetchBridgeCell(bridgeLock: LumosScript, indexer: Indexer, maxTimes: number): Promise<Cell> {
-    const cellCollector = new CellCollector(indexer, {
+  async fetchBridgeCell(bridgeLock: LumosScript, lumosIndexer: Indexer, maxTimes: number): Promise<Cell> {
+    const cellCollector = new CellCollector(lumosIndexer, {
       lock: bridgeLock,
     });
     let index = 0;
@@ -76,10 +76,10 @@ export class CkbTxGenerator {
     }
   }
 
-  async createBridgeCell(scripts: Script[], indexer: Indexer): Promise<TransactionSkeletonType> {
+  async createBridgeCell(scripts: Script[], lumosIndexer: Indexer): Promise<TransactionSkeletonType> {
     const fromAddress = getFromAddr();
-    let txSkeleton = TransactionSkeleton({ cellProvider: indexer });
-    const multisig_cell = await this.fetchMultisigCell(indexer, 60);
+    let txSkeleton = TransactionSkeleton({ cellProvider: lumosIndexer });
+    const multisig_cell = await this.fetchMultisigCell(lumosIndexer, 60);
     txSkeleton = await common.setupInputCell(txSkeleton, multisig_cell, ForceBridgeCore.config.ckb.multisigScript);
     const bridgeCellCapacity = 200n * 10n ** 8n;
     const bridgeOutputs = scripts.map((script) => {
@@ -109,10 +109,10 @@ export class CkbTxGenerator {
     return txSkeleton;
   }
 
-  async mint(records: MintAssetRecord[], indexer: Indexer): Promise<TransactionSkeletonType> {
+  async mint(records: MintAssetRecord[], lumosIndexer: Indexer): Promise<TransactionSkeletonType> {
     const fromAddress = getFromAddr();
-    let txSkeleton = TransactionSkeleton({ cellProvider: indexer });
-    const multisigCell = await this.fetchMultisigCell(indexer, 60);
+    let txSkeleton = TransactionSkeleton({ cellProvider: lumosIndexer });
+    const multisigCell = await this.fetchMultisigCell(lumosIndexer, 60);
     txSkeleton = await common.setupInputCell(txSkeleton, multisigCell, ForceBridgeCore.config.ckb.multisigScript);
     txSkeleton = txSkeleton.update('cellDeps', (cellDeps) => {
       return cellDeps.push(this.sudtDep);
@@ -122,7 +122,7 @@ export class CkbTxGenerator {
     });
 
     txSkeleton = await this.buildSudtOutput(txSkeleton, records);
-    txSkeleton = await this.buildBridgeCellOutput(txSkeleton, records, indexer);
+    txSkeleton = await this.buildBridgeCellOutput(txSkeleton, records, lumosIndexer);
 
     const feeRate = BigInt(1000);
     txSkeleton = await common.payFeeByFeeRate(txSkeleton, [fromAddress], feeRate);
@@ -185,7 +185,7 @@ export class CkbTxGenerator {
   async buildBridgeCellOutput(
     txSkeleton: TransactionSkeletonType,
     records: MintAssetRecord[],
-    indexer: Indexer,
+    lumosIndexer: Indexer,
   ): Promise<TransactionSkeletonType> {
     const assets = new Array(0);
     for (const record of records) {
@@ -204,7 +204,7 @@ export class CkbTxGenerator {
           hash_type: bridgeCellLockscript.hashType,
           args: bridgeCellLockscript.args,
         },
-        indexer,
+        lumosIndexer,
         5,
       );
       txSkeleton = txSkeleton.update('inputs', (inputs) => {

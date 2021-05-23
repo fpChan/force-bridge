@@ -1,18 +1,23 @@
 // const path = require('path');
 // const os = require('os');
 import { promises as fs } from 'fs';
-import { CellCollector, Indexer } from '@ckb-lumos/indexer';
+import { CellCollector, Indexer } from '@ckb-lumos/sql-indexer';
 import CKB from '@nervosnetwork/ckb-sdk-core';
 import * as utils from '@nervosnetwork/ckb-sdk-utils';
 import nconf from 'nconf';
+import Knex from "knex";
+import {getLumosIndexKnex} from "@force-bridge/x/dist/utils";
 
 const configPath = './config.json';
-const LUMOS_DB = './lumos_db';
+
 // const LUMOS_DB = path.join(os.tmpdir(), 'lumos_db')
 const CKB_URL = process.env.CKB_URL || 'http://127.0.0.1:8114';
 
+nconf.get('forceBridge:ckb:fromPrivateKey');
+
+
 const ckb = new CKB(CKB_URL);
-const indexer = new Indexer(CKB_URL, LUMOS_DB);
+const indexer = new Indexer(CKB_URL, getLumosIndexKnex());
 indexer.startForever();
 
 // private key for demo, don't expose it in production

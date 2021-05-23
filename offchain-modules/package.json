@@ -76,7 +76,7 @@
   },
   "dependencies": {
     "@ckb-lumos/base": "^0.16.0",
-    "@ckb-lumos/indexer": "^0.16.0",
+    "@ckb-lumos/sql-indexer": "^0.16.0",
     "@ckb-lumos/rpc": "0.16.0",
     "@ckb-lumos/common-scripts": "^0.16.0",
     "@ckb-lumos/config-manager": "^0.16.0",
@@ -107,7 +107,8 @@
     "trongrid": "^1.2.6",
     "tronweb": "^3.2.3",
     "typeorm": "^0.2.32",
-    "typeorm-naming-strategies": "^2.0.0"
+    "typeorm-naming-strategies": "^2.0.0",
+    "knex": "^0.95.6"
   },
   "ava": {
     "files": [
@@ -130,7 +131,7 @@
     ]
   },
   "lint-staged": {
-    "src/**/*.ts": [
+    "packages/*/src/**/*.ts": [
       "npm run lint-staged",
       "git add"
     ]
