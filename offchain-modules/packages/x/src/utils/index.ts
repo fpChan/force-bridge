@@ -5,6 +5,7 @@ import * as lodash from 'lodash';
 import nconf from 'nconf';
 import { Connection, createConnection, getConnectionManager, getConnectionOptions } from 'typeorm';
 import { logger } from './logger';
+import {Mutex} from 'async-mutex';
 
 export function asyncSleep(ms = 0) {
   return new Promise((r) => setTimeout(r, ms));
@@ -55,19 +56,22 @@ export function parsePrivateKey(path: string): string {
     return path;
   }
 }
+const dbConnMutex =  new Mutex();
 
 export async function getDBConnection(): Promise<Connection> {
-  const connectionManager = await getConnectionManager();
   // init db and start handlers
   let conn: Connection;
-  if (!connectionManager.has('default')) {
-    // ? load connection options from ormconfig or environment
-    logger.info(`getDBConnection create One`);
-    conn = await createConnection();
-  } else {
-    logger.info(`getDBConnection have One`);
-    conn = await connectionManager.get();
-  }
+  await dbConnMutex.runExclusive(async () => {
+    const connectionManager = await getConnectionManager();
+    if (!connectionManager.has('default')) {
+      // ? load connection options from ormconfig or environment
+      logger.info(`getDBConnection create One`);
+      conn = await createConnection();
+    } else {
+      logger.info(`getDBConnection have One`);
+      conn = await connectionManager.get();
+    }
+  })
   return conn;
 }
 export function getLumosIndexKnex(): Knex {
