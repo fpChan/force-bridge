@@ -1,11 +1,11 @@
 import fs from 'fs';
 import * as utils from '@nervosnetwork/ckb-sdk-utils';
+import { Mutex } from 'async-mutex';
 import Knex from 'knex';
 import * as lodash from 'lodash';
 import nconf from 'nconf';
 import { Connection, createConnection, getConnectionManager, getConnectionOptions } from 'typeorm';
 import { logger } from './logger';
-import {Mutex} from 'async-mutex';
 
 export function asyncSleep(ms = 0) {
   return new Promise((r) => setTimeout(r, ms));
@@ -56,7 +56,7 @@ export function parsePrivateKey(path: string): string {
     return path;
   }
 }
-const dbConnMutex =  new Mutex();
+const dbConnMutex = new Mutex();
 
 export async function getDBConnection(): Promise<Connection> {
   // init db and start handlers
@@ -71,7 +71,7 @@ export async function getDBConnection(): Promise<Connection> {
       logger.info(`getDBConnection have One`);
       conn = await connectionManager.get();
     }
-  })
+  });
   return conn;
 }
 export function getLumosIndexKnex(): Knex {
